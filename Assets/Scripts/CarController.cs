@@ -82,17 +82,42 @@ public class CarController : MonoBehaviour
         carRigidbody2D.MoveRotation(rotationAngle);
     }
 
-    public void SetInputVector(Vector2 inputVector)
-    {
-        steeringInput = inputVector.x;
-        accelerationInput = inputVector.y;
-    }
-
     void KillOrthogonalVelocity()
     {
         Vector2 forwardVelocity = transform.up * Vector2.Dot(carRigidbody2D.velocity, transform.up);
         Vector2 rightVelocity = transform.right * Vector2.Dot(carRigidbody2D.velocity, transform.right);
 
         carRigidbody2D.velocity = forwardVelocity + rightVelocity * driftFactor;
+    }
+
+    float GetLateralVelocity()
+    {
+        // Returns how fast the car is moving sideways
+        return Vector2.Dot(transform.right, carRigidbody2D.velocity);
+    }
+
+    public bool IsTireScreeching(out float lateralVelocity, out bool isBraking)
+    {
+        lateralVelocity = GetLateralVelocity();
+        isBraking = false;
+
+        // Check if we are moving forward and if the player is hitting the brakes
+        if (accelerationInput < 0 && velocityVsUp > 0)
+        {
+            isBraking = true;
+            return true;
+        }
+
+        // If we have a lot of side movement
+        if (Mathf.Abs(GetLateralVelocity()) > 2.0f)
+            return true;
+
+        return false;
+    }
+
+    public void SetInputVector(Vector2 inputVector)
+    {
+        steeringInput = inputVector.x;
+        accelerationInput = inputVector.y;
     }
 }
